@@ -1,11 +1,11 @@
 /* ----------------------------------------------------------------------------
  * Minimal probe: two numbers are enough.
  *
- * Run in the Firefox Browser Console:
+ * Run in the Browser Console:
  *   about:config -> devtools.chrome.enabled = true
  *   Ctrl+Shift+J, paste, Enter
  *
- * Prerequisites: signed in to a Firefox Account, the built-in VPN has
+ * Prerequisites: signed in to a browser account, the built-in VPN has
  * connected at least once, and no proxy is active.
  * -------------------------------------------------------------------------- */
 

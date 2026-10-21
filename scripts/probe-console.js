@@ -1,13 +1,13 @@
 /* ============================================================================
- * Firefox built-in VPN - token endpoint probe
+ * Built-in VPN - token endpoint probe
  *
- * Where to run: Firefox Browser Console
+ * Where to run: the Browser Console
  *   about:support -> "Open Browser Console", or Ctrl+Shift+J
  *   (the console command line must be enabled:
  *    about:config -> devtools.chrome.enabled = true, then reopen the window)
  *
  * Requirements:
- *   1) Firefox Account signed in, and the built-in VPN has connected
+ *   1) A browser account signed in, and the built-in VPN has connected
  *      successfully at least once (so the refresh token carries the vpn scope)
  *   2) System/router proxy disabled, so the egress is the real local IP
  *   3) browser.ipProtection.enabled = true

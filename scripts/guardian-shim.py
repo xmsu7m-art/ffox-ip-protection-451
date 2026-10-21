@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-guardian-shim.py - make Firefox's built-in VPN token endpoint reachable
+guardian-shim.py - make the built-in VPN token endpoint reachable
 from regions where the production edge returns HTTP 451.
 
 Why this works
@@ -186,7 +186,7 @@ def main():
     global LOG_PATH
 
     parser = argparse.ArgumentParser(
-        description="Firefox IP Protection /api/ -> /API/ shim"
+        description="Built-in VPN /api/ -> /API/ shim"
     )
     parser.add_argument("--host", default="127.0.0.1", help="bind address")
     parser.add_argument("--port", type=int, default=8787, help="bind port")
