@@ -3,11 +3,11 @@
 ## Daily use
 
 1. Log in to Windows and wait a few seconds.
-2. Open Firefox and click the VPN button in the toolbar.
+2. Open the browser and click the VPN button in the toolbar.
 3. Connect.
 
 No proxy, no script, no terminal. The shim starts with the session and only
-handles the credential request; browsing traffic goes straight to the Mozilla
+handles the credential request; browsing traffic goes straight to the vendor
 relay.
 
 ---
@@ -20,7 +20,7 @@ relay.
 | Visible launcher | `launchers/start-shim.bat` |
 | Silent launcher | `launchers/shim-hidden.vbs` |
 | Log | `shim.log` in the repository root |
-| Firefox preference | `browser.ipProtection.guardian.endpoint` = `http://127.0.0.1:8787/` |
+| Browser preference | `browser.ipProtection.guardian.endpoint` = `http://127.0.0.1:8787/` |
 
 The shim binds to `127.0.0.1` only. Nothing on the network can reach it.
 
@@ -62,7 +62,7 @@ before it expires.
 |---|---|---|
 | `200 OK` lines but the VPN drops | relay-side or network issue | disconnect and reconnect the VPN |
 | `-> 451` in the log | the edge rule changed; the case variant no longer works | fall back to routing only `vpn.mozilla.org` through a proxy |
-| `-> 401` | the OAuth token was rejected | reconnect the VPN; if it persists, sign in to Firefox again |
+| `-> 401` | the OAuth token was rejected | reconnect the VPN; if it persists, sign in to the browser account again |
 | `-> 403` | the account has no Guardian entitlement | enroll the account first |
 | `-> 502` | the shim could not reach `vpn.mozilla.org` | check DNS and general connectivity |
 | no new log lines | the shim is not running | run `launchers/start-shim.bat` and read the console |
@@ -100,7 +100,7 @@ No other system changes are made.
 ## Notes
 
 - Run only one instance. A second one exits with a bind error.
-- Firefox updates do not affect the shim or the preference.
+- Browser updates do not affect the shim or the preference.
 - If the VPN autostarts at login and reports unavailable before the shim is up,
   set `browser.ipProtection.autoStartEnabled` to `false` and connect manually.
 - The shim is a workaround for a vendor-side configuration defect, not a

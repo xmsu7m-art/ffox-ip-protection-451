@@ -1,14 +1,14 @@
-# Firefox Built-in VPN: Reaching the Token Endpoint Without an Upstream Proxy
+# Built-in Browser VPN: Reaching the Token Endpoint Without an Upstream Proxy
 
-Firefox's built-in VPN (IP Protection) uses a Mozilla-operated relay and a
-control plane hosted at `vpn.mozilla.org`. From mainland China the relay itself
+The browser's built-in VPN (IP Protection) uses a vendor-operated relay and a
+separate control plane. From mainland China the relay itself
 is reachable over plain TCP, but the control-plane call that issues the proxy
 credential (`GET /api/v1/fpn/token`) returns `451 Unavailable For Legal Reasons`,
 so the client ends up in a permanent "VPN unavailable" state.
 
 This repository documents the actual cause of that 451, a way to reach the same
 token handler without any upstream proxy, and a small local shim that makes
-Firefox use it.
+the browser use it.
 
 Measured on 2026-10-21 from a residential China Mobile line in Guangdong
 (AS9808).
@@ -30,7 +30,7 @@ default. The edge rule matches the raw lowercase prefix `/api/`. Changing three
 letters is enough to skip the rule while still hitting the same handler.
 
 A local loopback shim rewrites `/api/` to `/API/` and connects directly to
-Mozilla. No proxy, no relay in the middle, no third party sees the token.
+the service. No proxy, no relay in the middle, no third party sees the token.
 
 ---
 
@@ -66,10 +66,10 @@ served by a single edge POP. The request does not reach the application.
 - with a bogus JWT -> `401 {"error":"Unauthorized"}`
 - `GET /API/v1/fpn/status` -> `401`
 - `POST /API/v1/fpn/activate` -> `401 {"error":"jwt malformed"}`
-- `GET /API/v1/fpn/auth?experiment=alpha` -> `302` to the real Firefox Accounts
+- `GET /API/v1/fpn/auth?experiment=alpha` -> `302` to the real account-service
   authorization URL (`client_id=e6eb0d1e856335fc`)
 
-With a real Firefox Account OAuth token, `/API/v1/fpn/token` returns `200` and a
+With a real account OAuth token, `/API/v1/fpn/token` returns `200` and a
 ProxyPass JWT.
 
 ---
@@ -77,7 +77,7 @@ ProxyPass JWT.
 ## How the shim works
 
 ```
-Firefox --HTTP--> 127.0.0.1:8787 --TLS--> vpn.mozilla.org/API/v1/fpn/token
+Client  --HTTP--> 127.0.0.1:8787 --TLS--> vpn.mozilla.org/API/v1/fpn/token
 ```
 
 - The shim listens on the loopback interface only.
@@ -87,9 +87,9 @@ Firefox --HTTP--> 127.0.0.1:8787 --TLS--> vpn.mozilla.org/API/v1/fpn/token
   body and quota headers, and strips `Set-Cookie` and hop-by-hop headers.
 - Browsing traffic never touches it. Only token rotation does.
 
-Firefox builds the URL as `new URL(guardianEndpoint)` with the pathname
+The client builds the URL as `new URL(guardianEndpoint)` with the pathname
 hard-coded to `/api/v1/fpn/token`, so the preference alone cannot change the
-case. The shim is the smallest way to change it without patching Firefox.
+case. The shim is the smallest way to change it without patching the client.
 
 ---
 
@@ -114,7 +114,7 @@ case. The shim is the smallest way to change it without patching Firefox.
    browser.ipProtection.guardian.endpoint = http://127.0.0.1:8787/
    ```
 
-4. Restart Firefox and connect the built-in VPN.
+4. Restart the browser and connect the built-in VPN.
 
 Every two minutes or so the shim log shows a rotation:
 
@@ -132,12 +132,12 @@ shim.
 
 ## Verification
 
-`scripts/probe-console.js` runs in the Firefox Browser Console. It reads one
+`scripts/probe-console.js` runs in the Browser Console. It reads one
 OAuth token, sends seven requests, and prints a verdict.
 
 Requirements:
 
-- signed in to a Firefox Account, and the built-in VPN has connected at least
+- signed in to the browser account, and the built-in VPN has connected at least
   once (so the refresh token carries the `vpn` scope);
 - no router or system proxy;
 - `about:config` -> `devtools.chrome.enabled = true` so the Browser Console has
@@ -180,17 +180,17 @@ B2  uppercase /API/ with token      200
 ## Limits and caveats
 
 - This relies on a configuration defect: a case-sensitive edge rule in front of
-  a case-insensitive Express router. If Mozilla tightens either side, the method
+  a case-insensitive Express router. If the vendor tightens either side, the method
   stops working.
 - The initial enrollment/activation flow goes through a hidden browser and
   validates the endpoint origin against an allow-list. Enroll once with a
   working network path, then switch the preference.
-- Using the service outside its supported regions may conflict with Mozilla's
+- Using the service outside its supported regions may conflict with the vendor's
   terms. This is documented for research and interoperability purposes; use it
   at your own risk.
 - The relay accepted `CONNECT` from the same client IP in this environment. That
   is an observation, not a guarantee.
-- `experiment=alpha|beta|gamma|delta` only tags the Firefox Accounts OAuth
+- `experiment=alpha|beta|gamma|delta` only tags the account-service OAuth
   flow. All four values produce identical `client_id`, `scope` and
   `redirect_uri`; none of them changes the region decision.
 
@@ -198,6 +198,6 @@ B2  uppercase /API/ with token      200
 
 ## Disclaimer
 
-Not affiliated with Mozilla. Firefox, Mozilla VPN and related marks belong to the
-Mozilla Foundation. This repository contains no credentials and no Mozilla source
+Not affiliated with the vendor. All product names and marks belong to their
+respective owners. This repository contains no credentials and no vendor source
 code.

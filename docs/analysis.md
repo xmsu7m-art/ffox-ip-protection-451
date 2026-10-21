@@ -1,8 +1,8 @@
-# Analysis: Why the Firefox IP Protection Token Endpoint Returns 451
+# Analysis: Why the Built-in VPN Token Endpoint Returns 451
 
 This document expands the evidence summarized in the README. All requests were
 made on 2026-10-21 from a residential China Mobile line in Guangdong (AS9808),
-using Firefox's built-in VPN client and ordinary HTTPS requests. No proxy was
+using the browser's built-in VPN client and ordinary HTTPS requests. No proxy was
 involved unless stated.
 
 ---
@@ -99,7 +99,7 @@ With the case variant, every control-plane route answers from the origin:
 | `POST /API/v1/fpn/activate` (bogus JWT) | `401 jwt malformed` |
 | `GET /API/v1/fpn/auth?experiment=alpha` | `302` to `accounts.firefox.com/authorization?...` |
 
-A real Firefox Account OAuth token returns `200` with a ProxyPass JWT in the
+A real account OAuth token returns `200` with a ProxyPass JWT in the
 `token` field, plus `X-Quota-*` headers.
 
 ---
@@ -120,7 +120,7 @@ the same case-sensitivity bug, which suggests the rule is shared across
 environments rather than being a production-only mistake.
 
 The OAuth callback `/oauth/success` is outside `/api/` and reachable, but it
-only completes a Firefox Accounts flow. The ProxyPass is issued solely by
+only completes an account-service flow. The ProxyPass is issued solely by
 `/fpn/token`.
 
 Conclusion: there is no alternative credential endpoint. The only alternative is
@@ -142,12 +142,12 @@ the same endpoint through a different path spelling.
 
 Only the trailing `experiment=` value differs. The region rule is evaluated on
 the path at the edge, before the query string reaches the application, so the
-parameter cannot change the outcome. It selects a Firefox Accounts cohort, not a
+parameter cannot change the outcome. It selects an account-service cohort, not a
 region.
 
 ---
 
-## 7. Making Firefox use the variant
+## 7. Making the client use the variant
 
 `GuardianClient.sys.mjs` builds its URLs as:
 
@@ -164,8 +164,8 @@ change the origin, not the case. Two options exist:
 
 1. **Loopback shim (used here).** Point the preference at
    `http://127.0.0.1:8787/`; the shim rewrites the prefix and connects directly
-   to `vpn.mozilla.org`. No Firefox internals are patched and the approach
-   survives Firefox updates.
+   to `vpn.mozilla.org`. No browser internals are patched and the approach
+   survives browser updates.
 2. **Runtime monkey-patching.** Replace `fetchProxyPass` on the Guardian client
    instance. It works, but it duplicates the response parsing logic and breaks
    when the module changes.
@@ -183,7 +183,7 @@ The shim is the smaller and more durable option.
   network path, then switch the preference.
 - This environment observed a successful `CONNECT` to the relay from the same
   client IP. Relay-side region policy was not independently characterized.
-- Using the service outside its supported regions may conflict with Mozilla's
+- Using the service outside its supported regions may conflict with the vendor's
   terms of service.
 
 ---
@@ -198,7 +198,7 @@ for p in /api/v1/fpn/token /api/v1/fpn/nope /api/v2/fpn/token \
   curl -sS -o /dev/null -w "%{http_code}\n" "https://vpn.mozilla.org$p"
 done
 
-# authenticated comparison (requires a Firefox Account token)
+# authenticated comparison (requires an account token)
 curl -sS -D - -H "Authorization: Bearer $TOKEN" \
   https://vpn.mozilla.org/api/v1/fpn/token
 curl -sS -D - -H "Authorization: Bearer $TOKEN" \
